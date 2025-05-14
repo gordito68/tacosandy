@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<!-- saved from url=(0138)file:///C:/Users/USUARIO/AppData/Local/Temp/MicrosoftEdgeDownloads/a08f00b1-ce8e-4087-9772-da16923218b8/deepseek_html_20250513_b06d31.html -->
+<html lang="es"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistema de Taquería</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background-color: #f4f4f4;
+        }
+        .section {
+            background-color: white;
+            padding: 20px;
+            margin-bottom: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .menu-category {
+            margin-bottom: 15px;
+        }
+        .menu-item {
+            margin-left: 20px;
+        }
+        .hidden {
+            display: none;
+        }
+        button {
+            padding: 8px 16px;
+            margin: 5px;
+            cursor: pointer;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 4px;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        input, select {
+            padding: 5px;
+            margin: 5px;
+        }
+        #currentOrder, #ticket, #history {
+            white-space: pre-wrap;
+        }
+    </style>
+</head>
+<body>
+    <div class="section">
+        <h1>Sistema de Taquería 🌮</h1>
+        
+        <div class="section">
+            <h2>Menú</h2>
+            <div id="menuDisplay"><div class="menu-category"><strong>Tacos:</strong><div class="menu-item">Pastor: $15</div><div class="menu-item">Suadero: $16</div><div class="menu-item">Longaniza: $16</div><div class="menu-item">Campechano: $18</div><div class="menu-item">Bistec: $20</div></div><div class="menu-category"><strong>Bebidas:</strong><div class="menu-item">Agua: $10</div><div class="menu-item">Refresco: $15</div><div class="menu-item">Cerveza: $25</div><div class="menu-item">Jugo: $12</div></div><div class="menu-category"><strong>Extras:</strong><div class="menu-item">Queso: $5</div><div class="menu-item">Guacamole: $10</div><div class="menu-item">Salsa especial: $5</div></div></div>
+        </div>
+
+        <div class="section">
+            <h2>Tomar Pedido</h2>
+            <select id="categorySelect">
+                <option value="">Seleccione categoría</option>
+            <option value="Tacos">Tacos</option><option value="Bebidas">Bebidas</option><option value="Extras">Extras</option></select>
+            <select id="itemSelect"><option value="">Seleccione item</option><option value="Pastor">Pastor</option><option value="Suadero">Suadero</option><option value="Longaniza">Longaniza</option><option value="Campechano">Campechano</option><option value="Bistec">Bistec</option></select>
+            <input type="number" id="quantity" min="1" value="1" placeholder="Cantidad">
+            <button onclick="addToOrder()">Agregar al pedido</button>
+        </div>
+
+        <div class="section">
+            <h2>Pedido Actual</h2>
+            <div id="currentOrder">No hay items en el pedido actual.</div>
+            <button onclick="calculateTotal()">Calcular Total</button>
+            <button onclick="generateTicket()">Generar Ticket</button>
+        </div>
+
+        <div class="section" id="ticketSection">
+            <h2>Ticket</h2>
+            <div id="ticket">Fecha: 13/5/2025, 4:14:58 p.m.
+
+Detalle del pedido:
+10 x Longaniza (Tacos): $16 c/u = $160
+
+TOTAL A PAGAR: $160</div>
+        </div>
+
+        <div class="section">
+            <h2>Historial de Pedidos</h2>
+            <button onclick="toggleHistory()">Mostrar/Ocultar Historial</button>
+            <div id="history" class="">Pedido #1 - 13/5/2025, 4:14:58 p.m.
+  10 x Longaniza (Tacos)
+  Total: $160
+
+</div>
+        </div>
+    </div>
+
+    <script>
+        const menu = {
+            Tacos: {
+                Pastor: 15,
+                Suadero: 16,
+                Longaniza: 16,
+                Campechano: 18,
+                Bistec: 20
+            },
+            Bebidas: {
+                Agua: 10,
+                Refresco: 15,
+                Cerveza: 25,
+                Jugo: 12
+            },
+            Extras: {
+                Queso: 5,
+                Guacamole: 10,
+                'Salsa especial': 5
+            }
+        };
+
+        let currentOrder = {};
+        let orderHistory = [];
+
+        // Inicialización
+        document.addEventListener('DOMContentLoaded', () => {
+            populateCategorySelect();
+            showMenu();
+        });
+
+        function populateCategorySelect() {
+            const select = document.getElementById('categorySelect');
+            Object.keys(menu).forEach(category => {
+                const option = document.createElement('option');
+                option.value = category;
+                option.textContent = category;
+                select.appendChild(option);
+            });
+        }
+
+        function populateItemSelect(category) {
+            const select = document.getElementById('itemSelect');
+            select.innerHTML = '<option value="">Seleccione item</option>';
+            Object.keys(menu[category]).forEach(item => {
+                const option = document.createElement('option');
+                option.value = item;
+                option.textContent = item;
+                select.appendChild(option);
+            });
+        }
+
+        document.getElementById('categorySelect').addEventListener('change', (e) => {
+            populateItemSelect(e.target.value);
+        });
+
+        function showMenu() {
+            const menuDisplay = document.getElementById('menuDisplay');
+            let html = '';
+            for (const [category, items] of Object.entries(menu)) {
+                html += `<div class="menu-category"><strong>${category}:</strong>`;
+                for (const [item, price] of Object.entries(items)) {
+                    html += `<div class="menu-item">${item}: $${price}</div>`;
+                }
+                html += '</div>';
+            }
+            menuDisplay.innerHTML = html;
+        }
+
+        function addToOrder() {
+            const category = document.getElementById('categorySelect').value;
+            const item = document.getElementById('itemSelect').value;
+            const quantity = parseInt(document.getElementById('quantity').value);
+
+            if (!category || !item || quantity < 1) {
+                alert('Por favor complete todos los campos correctamente');
+                return;
+            }
+
+            const key = `${item} (${category})`;
+            if (currentOrder[key]) {
+                currentOrder[key].cantidad += quantity;
+            } else {
+                currentOrder[key] = {
+                    cantidad: quantity,
+                    precio: menu[category][item]
+                };
+            }
+
+            updateCurrentOrderDisplay();
+        }
+
+        function updateCurrentOrderDisplay() {
+            const display = document.getElementById('currentOrder');
+            if (Object.keys(currentOrder).length === 0) {
+                display.textContent = 'No hay items en el pedido actual.';
+                return;
+            }
+
+            let text = '';
+            for (const [item, data] of Object.entries(currentOrder)) {
+                text += `${data.cantidad} x ${item}\n`;
+            }
+            display.textContent = text;
+        }
+
+        function calculateTotal() {
+            const total = Object.values(currentOrder).reduce(
+                (acc, item) => acc + (item.cantidad * item.precio), 0
+            );
+            alert(`Total del pedido actual: $${total}`);
+        }
+
+        function generateTicket() {
+            if (Object.keys(currentOrder).length === 0) {
+                alert('No hay pedido para generar ticket');
+                return;
+            }
+
+            const ticketSection = document.getElementById('ticketSection');
+            const ticketDiv = document.getElementById('ticket');
+            ticketSection.classList.remove('hidden');
+
+            let ticketText = `Fecha: ${new Date().toLocaleString()}\n\nDetalle del pedido:\n`;
+            let total = 0;
+
+            for (const [item, data] of Object.entries(currentOrder)) {
+                const subtotal = data.cantidad * data.precio;
+                ticketText += `${data.cantidad} x ${item}: $${data.precio} c/u = $${subtotal}\n`;
+                total += subtotal;
+            }
+
+            ticketText += `\nTOTAL A PAGAR: $${total}`;
+            ticketDiv.textContent = ticketText;
+
+            // Guardar en historial
+            orderHistory.push({
+                fecha: new Date(),
+                pedido: {...currentOrder},
+                total: total
+            });
+
+            // Resetear pedido actual
+            currentOrder = {};
+            updateCurrentOrderDisplay();
+        }
+
+        function toggleHistory() {
+            const historyDiv = document.getElementById('history');
+            historyDiv.classList.toggle('hidden');
+            
+            if (!historyDiv.classList.contains('hidden')) {
+                let historyText = '';
+                orderHistory.forEach((pedido, index) => {
+                    historyText += `Pedido #${index + 1} - ${pedido.fecha.toLocaleString()}\n`;
+                    for (const [item, data] of Object.entries(pedido.pedido)) {
+                        historyText += `  ${data.cantidad} x ${item}\n`;
+                    }
+                    historyText += `  Total: $${pedido.total}\n\n`;
+                });
+                historyDiv.textContent = historyText || 'No hay pedidos en el historial.';
+            }
+        }
+    </script>
+
+</body></html>
